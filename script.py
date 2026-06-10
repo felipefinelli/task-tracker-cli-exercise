@@ -4,9 +4,11 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+
 json_file = Path("database.json")
 
 json_exist = json_file.exists()
+
 
 def add():
 
@@ -26,6 +28,7 @@ def add():
 
             json.dump(dados_novos_criar, f, indent=5, ensure_ascii=False)
 
+            print("Task added successfully (ID: 1)")
     else:
         with open(file=json_file, mode="r", encoding="utf-8") as f:
             dados_json = json.load(f)
@@ -34,7 +37,7 @@ def add():
         
         for task in dados_json:
             todos_ids.append(task["id"])
-        
+
         ultimo_id = max(todos_ids) + 1
             
         criar_tarefa["id"] = ultimo_id
@@ -43,117 +46,196 @@ def add():
 
         with open(file=json_file, mode="w", encoding="utf-8") as f:
             json.dump(dados_json, f, indent=5, ensure_ascii=False)
-
+        print(f"Task added successfully (ID: {ultimo_id})")
 
 def update():
-    if not json_exist:
-         print("Erro! o arquivo database_json não existe.")
+    ref_id = int(sys.argv[3])
 
+    new_description = "".join(sys.argv[4:])
+
+    with open(file=json_file, mode="r", encoding="utf-8") as f:
+        dados_json = json.load(f)
+    
+    for task in dados_json:   
+        if task["id"] == ref_id:
+            task["description"] = new_description
+            task["updatedAt"] = datetime.now().strftime("%d/%m/%Y %H:%M")
+            break
     else:
-        ref_id = int(sys.argv[3])
+        print("Erro! O id digitado não existe.")
 
-        new_description = "".join(sys.argv[4:])
-
-        with open(file=json_file, mode="r", encoding="utf-8") as f:
-            dados_json = json.load(f)
-        
-        
-        
-        
-        #"elemento" representa cada dicionario dentro da lista dados_json.
-        #vai checar o "id" de cada um e se o id for = ao ref_id, vai atualizar alguns dados
-        # e depois o break vai fazer com que pare a iteracao e ao mesmo tempo evite com que o
-        #bloco else rode.   For + Else é algo compativel.
-
-        #
-        
-        for elemento in dados_json:   
-            if elemento["id"] == ref_id:
-                elemento["description"] = new_description
-                elemento["updatedAt"] = datetime.now().strftime("%d/%m/%Y %H:%M")
-                break
-        else:
-            print("Erro! O id digitado não existe.")
-
-        with open(file = json_file, mode = "w", encoding = "utf-8") as f:
-            json.dump(dados_json, f, indent = 5, ensure_ascii = False)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    with open(file = json_file, mode = "w", encoding = "utf-8") as f:
+        json.dump(dados_json, f, indent = 5, ensure_ascii = False)
 
 
 def delete():
-    print("dummy")
+    ref_id = int(sys.argv[3])
+
+    with open(file=json_file, mode="r", encoding="utf-8") as f:
+        dados_json = json.load(f)
+    
+    for task in dados_json:   
+        if task["id"] == ref_id:
+            dados_json.remove(task)
+            break
+    else:
+        print("Erro! O id digitado não existe.")
+
+    if len(dados_json) == 0:
+        json_file.unlink()
+
+    else:   
+        with open(file = json_file, mode = "w", encoding = "utf-8") as f:
+            json.dump(dados_json, f, indent = 5, ensure_ascii = False)
+
+    
+def change_task_status():
+    ref_id = int(sys.argv[3])
+
+    transalate = { "mark-in-progress":"in-progress",
+                  "mark-done":"done"}
+    
 
 
-def loop():
-    print("dummy")
+
+
+
+
+
+
+    
+
+  
+    new_status = transalate[sys.argv[2]]
+
+   
+
+    with open(file=json_file, mode="r", encoding="utf-8") as f:
+        dados_json = json.load(f)
+    
+    for task in dados_json:   
+        if task["id"] == ref_id:
+            task["status"] = new_status
+            task["updatedAt"] = datetime.now().strftime("%d/%m/%Y %H:%M")
+            break
+    else:
+        print("Erro! O id digitado não existe.")
+
+    with open(file = json_file, mode = "w", encoding = "utf-8") as f:
+        json.dump(dados_json, f, indent = 5, ensure_ascii = False)
 
 
 def list():
-    print("dummy")
+    if len(sys.argv) < 4:
+        with open(file = json_file, mode = "r", encoding = "utf-8") as f:
+            dados_json = json.load(f)
+        print(json.dumps(dados_json, indent = 5, ensure_ascii = False))
+        
+
+    else:
+        lista_parametros_aceitos = ["done", "todo", "in-progress"]
+
+        list_type = sys.argv[3]
+
+        specific_tasks = []     
+
+        if list_type in lista_parametros_aceitos:
+
+            with open(file = json_file, mode = "r", encoding = "utf-8") as f:
+                dados_json = json.load(f)
+        
+            for task in dados_json:   
+                if task["status"] == sys.argv[3]:
+                    specific_tasks.append(task)
+                
+            if len(specific_tasks) > 0:
+                print(json.dumps(specific_tasks, indent = 5, ensure_ascii = False))
+            else:
+                print("nao tem tasks com esse status")
+        else:
+            print("Erro! Comando list inexistente.")
 
 
-def mark_in_progress():
-    print("dummy")
 
 
-def mark_done():
-    print("dummy")
+
+
+
 
 
 def main():
+
     if sys.argv[2] == "add":
-        if len(sys.argv) < 4:
-            print("Erro, faltou incluir a descrição.")
-        else:
-            add()
-
-    elif sys.argv[2] == "update":
-        update()
-
-    elif sys.argv[2] == "delete":
-        delete()
-
-    elif sys.argv[2] == "mark-in-progress":
-        mark_in_progress()
-
-    elif sys.argv[2] == "mark-done":
-        mark_done()
-
-    elif sys.argv[2] == "list":
-        list()
-
+        add()
     else:
-        loop()
+        if not json_exist:
+            print("Erro! o arquivo database_json não existe.")
+
+        else:
+            if sys.argv[2] == "mark-in-progress" or sys.argv[2] ==  "mark-done":
+                change_task_status()
+
+            elif sys.argv[2] == "list":
+                list()
+        
+        
+            elif len(sys.argv) < 4:
+                print("Erro, faltou incluir o id da task.")
+            
+            elif sys.argv[2] == "update":
+                if len(sys.argv) < 5:
+                    print("Erro, faltou incluir a descrição.")
+                else:
+                    update()
+
+            elif sys.argv[2] == "delete":
+                delete()
 
 
-main()
+
+
+
+
+
+def verificar_argumentos():
+
+    comandos_existentes = ["add","update","delete","mark-in-progress", "mark-done", "list" ]
+
+    task_id_required = ["update","delete","mark-in-progress", "mark-done"]
+
+
+
+    if len(sys.argv) < 2:
+        print("Para rodar o programa, inclua o termo 'task-cli'. junto de 1 comando valido")
+              
+    elif sys.argv[1] != "task-cli":
+         print("task-cli escrito errado")
+        
+    elif len(sys.argv) < 3:
+        print("falta especificar um comando apos task-cli")
+        
+    elif sys.argv[2] not in comandos_existentes:
+        print("Comando nao reconhecido, tente utilizar esses: 'add','update','delete','mark-in-progress', 'mark-done', 'list'")
+    
+    elif sys.argv[2] in task_id_required:
+        if len(sys.argv) < 4:
+            print("faltou indicar o id da task")
+
+        elif not sys.argv[3].isdigit():
+            print("id nao existe, digite um numero inteiro")
+        
+        else:
+            main()
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    else:
+        main()
+ 
+verificar_argumentos()
